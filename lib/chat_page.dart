@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'add_post.dart';
+import 'add_post_page.dart';
 import 'login_page.dart';
 
 class ChatPage extends StatelessWidget {
@@ -34,7 +34,7 @@ class ChatPage extends StatelessWidget {
         onPressed: () async {
           await Navigator.of(context)
               .push(MaterialPageRoute(builder: (context) {
-            return AddPost();
+            return AddPostPage(user);
           }));
         },
       ),
