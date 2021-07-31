@@ -16,12 +16,13 @@ class ChatPage extends StatelessWidget {
         actions: <Widget>[
           IconButton(
               onPressed: () async {
+                await FirebaseAuth.instance.signOut();
                 await Navigator.of(context)
                     .pushReplacement(MaterialPageRoute(builder: (context) {
                   return LoginPage();
                 }));
               },
-              icon: Icon(Icons.close))
+              icon: Icon(Icons.logout))
         ],
       ),
       body: Center(
