@@ -1,17 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mychatapp/main.dart';
 
 import 'add_post_page.dart';
 import 'login_page.dart';
 
-class ChatPage extends StatelessWidget {
-  ChatPage(this.user);
-
-  final User user;
-
+class ChatPage extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ScopedReader watch) {
+    final User user = watch(userProvider).state!;
+    final AsyncValue<QuerySnapshot> asyncPostsQuery = watch(postsQueryProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('チャット'),
@@ -34,42 +35,38 @@ class ChatPage extends StatelessWidget {
             child: Text('ログイン情報: ${user.email}'),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('posts')
-                  .orderBy('date')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final List<DocumentSnapshot> documents = snapshot.data!.docs;
-                  return ListView(
-                    children: documents.map((document) {
-                      return Card(
-                        child: ListTile(
-                          title: Text(document['text']),
-                          subtitle: Text(document['email']),
-                          trailing: document['email'] == user.email
-                              ? IconButton(
-                                  icon: Icon(Icons.delete),
-                                  onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('posts')
-                                        .doc(document.id)
-                                        .delete();
-                                  },
-                                )
-                              : null,
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }
-                return Center(
-                  child: Text('読込中...'),
+              // whenを使うと、状態に応じた挙動を実装できる
+              child: asyncPostsQuery.when(data: (QuerySnapshot query) {
+            return ListView(
+              children: query.docs.map((document) {
+                return Card(
+                  child: ListTile(
+                    title: Text(document['text']),
+                    subtitle: Text(document['email']),
+                    trailing: document['email'] == user.email
+                        ? IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () async {
+                              await FirebaseFirestore.instance
+                                  .collection('posts')
+                                  .doc(document.id)
+                                  .delete();
+                            },
+                          )
+                        : null,
+                  ),
                 );
-              },
-            ),
-          )
+              }).toList(),
+            );
+          }, loading: () {
+            return Center(
+              child: Text('読込中...'),
+            );
+          }, error: (e, stackTrace) {
+            return Center(
+              child: Text(e.toString()),
+            );
+          }))
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -77,7 +74,7 @@ class ChatPage extends StatelessWidget {
         onPressed: () async {
           await Navigator.of(context)
               .push(MaterialPageRoute(builder: (context) {
-            return AddPostPage(user);
+            return AddPostPage();
           }));
         },
       ),

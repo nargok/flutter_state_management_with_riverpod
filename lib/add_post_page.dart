@@ -1,21 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mychatapp/main.dart';
 
-class AddPostPage extends StatefulWidget {
-  AddPostPage(this.user);
-
-  final User user;
-
+class AddPostPage extends ConsumerWidget {
   @override
-  _AddPostPageState createState() => _AddPostPageState();
-}
+  Widget build(BuildContext context, ScopedReader watch) {
+    final user = watch(userProvider).state!;
+    final messageText = watch(messageTextProvider).state;
 
-class _AddPostPageState extends State<AddPostPage> {
-  String messageText = '';
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text('チャット投稿'),
@@ -31,9 +24,7 @@ class _AddPostPageState extends State<AddPostPage> {
                     keyboardType: TextInputType.multiline,
                     maxLines: 3,
                     onChanged: (String value) {
-                      setState(() {
-                        messageText = value;
-                      });
+                      context.read(messageTextProvider).state = value;
                     },
                   ),
                   const SizedBox(
@@ -45,7 +36,7 @@ class _AddPostPageState extends State<AddPostPage> {
                       child: Text('投稿'),
                       onPressed: () async {
                         final date = DateTime.now().toLocal().toIso8601String();
-                        final email = widget.user.email;
+                        final email = user.email!;
                         await FirebaseFirestore.instance
                             .collection('posts')
                             .doc()

@@ -1,21 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mychatapp/main.dart';
 
 import 'chat_page.dart';
 
-
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
-}
+  Widget build(BuildContext context, ScopedReader watch) {
+    String infoText = watch(infoTextProvider).state;
+    String email = watch(emailProvider).state;
+    String password = watch(passwordProvider).state;
 
-class _LoginPageState extends State<LoginPage> {
-  String infoText = '';
-  String email = '';
-  String password = '';
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Container(
@@ -26,16 +22,14 @@ class _LoginPageState extends State<LoginPage> {
               TextFormField(
                 decoration: InputDecoration(labelText: 'メールアドレス'),
                 onChanged: (String value) {
-                  setState(() {
-                    email = value;
-                  });
+                  context.read(emailProvider).state = value;
                 },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'パスワード'),
                 obscureText: true,
                 onChanged: (String value) {
-                  password = value;
+                  context.read(passwordProvider).state = value;
                 },
               ),
               Container(
@@ -50,15 +44,14 @@ class _LoginPageState extends State<LoginPage> {
                     try {
                       final FirebaseAuth auth = FirebaseAuth.instance;
                       final result = await auth.createUserWithEmailAndPassword(email: email, password: password);
+                      context.read(userProvider).state = result.user;
                       await Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (context) {
-                            return ChatPage(result.user!);
+                            return ChatPage();
                           })
                       );
                     } catch (e) {
-                      setState(() {
-                        infoText = "登録に失敗しました: ${e.toString()}";
-                      });
+                      context.read(infoTextProvider).state = "登録に失敗しました: ${e.toString()}";
                     }
                   },
                 ),
@@ -72,15 +65,14 @@ class _LoginPageState extends State<LoginPage> {
                     try {
                       final FirebaseAuth auth = FirebaseAuth.instance;
                       final result = await auth.signInWithEmailAndPassword(email: email, password: password);
+                      context.read(userProvider).state = result.user;
                       await Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (context) {
-                            return ChatPage(result.user!);
+                            return ChatPage();
                           })
                       );
                     } catch (e) {
-                      setState(() {
-                        infoText = "ログインに失敗しました: ${e.toString()}";
-                      });
+                      context.read(infoTextProvider).state = "ログインに失敗しました: ${e.toString()}";
                     }
                   },
                 ),
@@ -92,3 +84,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
