@@ -9,6 +9,7 @@ class ChatPage extends StatelessWidget {
   ChatPage(this.user);
 
   final User user;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,8 +27,39 @@ class ChatPage extends StatelessWidget {
               icon: Icon(Icons.logout))
         ],
       ),
-      body: Center(
-        child: Text('ログイン情報: ${user.email}'),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            child: Text('ログイン情報: ${user.email}'),
+          ),
+          Expanded(
+            child: FutureBuilder<QuerySnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('posts')
+                  .orderBy('date')
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                  return ListView(
+                    children: documents.map((document) {
+                      return Card(
+                        child: ListTile(
+                          title: Text(document['text']),
+                          subtitle: Text(document['email']),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }
+                return Center(
+                  child: Text('読込中...'),
+                );
+              },
+            ),
+          )
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
