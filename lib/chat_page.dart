@@ -34,11 +34,11 @@ class ChatPage extends StatelessWidget {
             child: Text('ログイン情報: ${user.email}'),
           ),
           Expanded(
-            child: FutureBuilder<QuerySnapshot>(
-              future: FirebaseFirestore.instance
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('posts')
                   .orderBy('date')
-                  .get(),
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
@@ -50,15 +50,15 @@ class ChatPage extends StatelessWidget {
                           subtitle: Text(document['email']),
                           trailing: document['email'] == user.email
                               ? IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () async {
-                              await FirebaseFirestore.instance
-                                  .collection('posts')
-                                  .doc(document.id)
-                                  .delete();
-                            },
-                          )
-                          : null,
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () async {
+                                    await FirebaseFirestore.instance
+                                        .collection('posts')
+                                        .doc(document.id)
+                                        .delete();
+                                  },
+                                )
+                              : null,
                         ),
                       );
                     }).toList(),
